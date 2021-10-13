@@ -54,7 +54,7 @@ void render(float rd, int** colmat, int types)
     }
     window.display();
 };
-void itt(float* ms, int types, float* qs, float k, float dt, float a, float b, float rd, float rs, float endurance_s)
+void itt(float* ms, int types, float** qs, float k, float dt, float a, float b, float rd, float rs, float endurance_s)
 {
     float r;
 
@@ -79,7 +79,7 @@ void itt(float* ms, int types, float* qs, float k, float dt, float a, float b, f
                 };
             };
 
-            r = (k * qs[atm.type] * qs[atm2.type]) / (ms[atm.type] * (pow(atm.x - atm2.x, 2) + pow(atm.y - atm2.y, 2)));
+            r = (k * qs[atm.type][atm2.type]) / (ms[atm.type] * (pow(atm.x - atm2.x, 2) + pow(atm.y - atm2.y, 2)));
             //отталкивание
             if (atm2.x != atm.x || atm2.y != atm.y)
             {
@@ -127,15 +127,19 @@ int main()
     float dt = 1.;//время шага симуляции
     float k = 100;//коэффициент отталкивания
     float rs = 5.;//расстояние связи - радиус * 2
-    float endurance_s = 0.;//прочность связи
+    float endurance_s = 0.1;//прочность связи
 
     int** colmat = new int*[types];//цвета типов
     float* ms = new float[types];//масса типов
-    float* qs = new float[types];//заряд типов
+    float** qs = new float*[types];//сила отталкивания
 
     for (int i = 0; i < types; i++)
     {
         colmat[i] = new int[3];
+    }
+    for (int i = 0; i < types; i++)
+    {
+        qs[i] = new float[types];
     }
 
     colmat[0][0] = 0;
@@ -154,9 +158,17 @@ int main()
     ms[1] = 1.5;
     ms[2] = 1.2;
     
-    qs[0] = 1.;
-    qs[1] = 1.2;
-    qs[2] = 1.2;
+    qs[0][0] = 0;//отталкивание частиц № 1 и 1
+    qs[0][1] = 1;//отталкивание частиц № 1 и 2
+    qs[0][2] = 0;//отталкивание частиц № 1 и 3
+
+    qs[1][0] = -1;
+    qs[1][1] = 0;
+    qs[1][2] = 1;
+
+    qs[2][0] = 0;
+    qs[2][1] = 0;
+    qs[2][2] = 1;
     /*
     esc - выход
     */
