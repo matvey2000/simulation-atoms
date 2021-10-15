@@ -90,7 +90,7 @@ void render(float rd, int** colmat, int types)
     }
     window.display();
 };
-void itt(float* ms, int types, float** qs, float k, float dt, float a, float b, float rd, float rs, float endurance_s, float ed, float edst)
+void itt(float* ms, int types, float** qs, float k, float dt, float a, float b, float rd, float rs, float endurance_s, float ed, float edst, float smax)
 {
     float r;
 
@@ -128,7 +128,21 @@ void itt(float* ms, int types, float** qs, float k, float dt, float a, float b, 
             {
                 std::cout << n0 << " " << n1 << " " << "\n";
                 atm.svz.push_back(n0);
-            } 
+            }
+
+            //разрыв связи
+            if (sqrt(pow(atm.x - atm2.x, 2) + pow(atm.y - atm2.y, 2)) >= (rd * 2 + smax) && svz)
+            {
+                for (auto svzn = std::begin(atm.svz); svzn != std::end(atm.svz); svzn++)
+                {
+                    if (*svzn == n0)
+                    {
+                        svzn = atm.svz.erase(svzn);
+
+                        break;
+                    }
+                }
+            };
 
             //притяжение связей
             if (svz)
@@ -166,15 +180,15 @@ void itt(float* ms, int types, float** qs, float k, float dt, float a, float b, 
         }
         else if (atm.x <= -w / 2)
         {
-            atm.vx = dt * edst;
+            atm.vx += dt * edst;
         }
         if (atm.y >= h / 2)
         {
-            atm.y = -dt * edst;
+            atm.vy += -dt * edst;
         }
         else if (atm.y <= -h / 2)
         {
-            atm.vy = dt * edst;
+            atm.vy += dt * edst;
         }
 
         //запись
@@ -192,14 +206,16 @@ int main()
     float rd = 10.;//радиус атома
     float dt = 1.;//время шага симуляции
     float k = 100;//коэффициент отталкивания
-    float rs = 5.;//расстояние связи - радиус * 2
+    float rs = 5.;//min расстояние связи - радиус * 2
     float endurance_s = 0.1;//прочность связи
     float ed = 1.;//сопротивление атома проникновению внутрь себя
     float edst = 1.;;//сопротивление стенки проникновению внутрь себя
+    float smax = 10.;//max расстояние связи, расстояние разрыва - радиус * 2
 
     int** colmat = new int*[types];//цвета типов
     float* ms = new float[types];//масса типов
     float** qs = new float*[types];//сила отталкивания
+    float* vs = new float[types];//валентности типов
 
     for (int i = 0; i < types; i++)
     {
@@ -237,6 +253,10 @@ int main()
     qs[2][0] = 0;
     qs[2][1] = 2;
     qs[2][2] = 1;
+
+    vs[0] = 2;
+    vs[1] = 3;
+    vs[2] = 1;
     /*
     esc - выход
     */
@@ -261,7 +281,7 @@ int main()
             }
         }
         
-        itt(ms, types, qs, k, dt, a, b, rd, rs, endurance_s, ed, edst);
+        itt(ms, types, qs, k, dt, a, b, rd, rs, endurance_s, ed, edst, smax);
         render(rd, colmat, types);
     }
 }
