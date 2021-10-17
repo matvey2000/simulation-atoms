@@ -15,8 +15,6 @@ struct type
     int col[3];//цвет
 
     float m;//масса
-    float q;//заряд
-    float kr;//кристаллохимический радиус
 };
 struct atom
 {
@@ -38,6 +36,7 @@ struct substr
     float rd;//радиус атома
     float dt;//время шага симуляции
     float qo;//коэффицент притяжения
+    float g;//ускорение свободного падения
 };
 
 std::list<atom> atms;//атом лист
@@ -112,11 +111,10 @@ void itt()
             }
 
             //Леннард-Джонс
-            float ar = (atm.tpe.kr + atm2.tpe.kr) / (sqrt((atm.x - atm2.x) * (atm.x - atm2.x) + (atm.y - atm2.y) * (atm.y - atm2.y)) - 2 * sbs.rd);;
-            float md = (12 * atm.tpe.q * atm2.tpe.q / (atm.tpe.kr + atm2.tpe.kr) * (pow(ar,13) - pow(ar, 7))) / atm.tpe.m * sbs.qo;
+            float md = sbs.qo / ((atm.x - atm2.x) * (atm.x - atm2.x) + (atm.y - atm2.y) * (atm.y - atm2.y)) / atm.tpe.m;
             
-            atm.ax -= sbs.dt * (atm.x - atm2.x) / sqrt((atm.x - atm2.x) * (atm.x - atm2.x) + (atm.y - atm2.y) * (atm.y - atm2.y)) * md;
-            atm.ay -= sbs.dt * (atm.y - atm2.y) / sqrt((atm.x - atm2.x) * (atm.x - atm2.x) + (atm.y - atm2.y) * (atm.y - atm2.y)) * md;
+            atm.ax += sbs.dt * (atm.x - atm2.x) / sqrt((atm.x - atm2.x) * (atm.x - atm2.x) + (atm.y - atm2.y) * (atm.y - atm2.y)) * md;
+            atm.ay += sbs.dt * (atm.y - atm2.y) / sqrt((atm.x - atm2.x) * (atm.x - atm2.x) + (atm.y - atm2.y) * (atm.y - atm2.y)) * md;
         }
 
         //стенки
@@ -128,6 +126,9 @@ void itt()
         {
             atm.vy = -atm.vy;
         }
+
+        //гравитация
+        atm.ay += sbs.g * sbs.dt;
 
         //запись
         atms_c.push_back(atm);
@@ -160,10 +161,11 @@ int main()
     int Stypes = 3;//кол-во типов
     sbs.a = w;
     sbs.b = h;
-    sbs.dt = 1.;
-    sbs.n = 100;
+    sbs.dt = 0.1;
+    sbs.n = 200;
     sbs.rd = 10.;
     sbs.qo = pow(10, 5);
+    sbs.g = 9.8;
 
     type tpe;
 
@@ -171,8 +173,6 @@ int main()
     tpe.col[1] = 191;
     tpe.col[2] = 255;
     tpe.m = 1.;
-    tpe.q = 6;
-    tpe.kr = 1.;
 
     tpes.push_back(tpe);
 
@@ -180,8 +180,6 @@ int main()
     tpe.col[1] = 255;
     tpe.col[2] = 0;
     tpe.m = 1.5;
-    tpe.q = 3;
-    tpe.kr = 1.5;
 
     tpes.push_back(tpe);
 
@@ -189,8 +187,6 @@ int main()
     tpe.col[1] = 20;
     tpe.col[2] = 60;
     tpe.m = 1.2;
-    tpe.q = 2;
-    tpe.kr = 2.;
 
     tpes.push_back(tpe);
     /*
