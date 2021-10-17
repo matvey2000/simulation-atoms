@@ -196,8 +196,10 @@ int main()
     /*
     esc - выход
     f1 - режим "новая частица"
-    left click - установка частицы в режиме новая частица
+    f2 - режим "траектории"
+    enter - установка частицы в режиме новая частица
     wheel - смена типа частицы
+    space - пауза
     */
     start();
 
@@ -213,6 +215,9 @@ int main()
     {
         len++;
     }
+
+    bool go = true;
+    bool f2 = true;
     while (window.isOpen())
     {
         float mx = sf::Mouse::getPosition().x;
@@ -224,11 +229,11 @@ int main()
         {
             if (evnt.type == sf::Event::KeyPressed)
             {
-                if (evnt.key.code == sf::Keyboard::Escape)
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
                 {
                     window.close();
                 }
-                else if (evnt.key.code == sf::Keyboard::F1)
+                else if (sf::Keyboard::isKeyPressed(sf::Keyboard::F1))
                 {
                     if (rem)
                     {
@@ -240,17 +245,39 @@ int main()
                     }
                     tpn = 0;
                 }
-                else if (evnt.key.code = sf::Keyboard::Enter)
+                else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
                 {
                     if (rem)
                     {
                         atom atm;
 
                         atm.tpe = tpen;
-                        atm.x = mx - w/2;
-                        atm.y = my - h/2;
+                        atm.x = mx - w / 2;
+                        atm.y = my - h / 2;
 
                         atms.push_back(atm);
+                    }
+                }
+                else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+                {
+                    if (go)
+                    {
+                        go = false;
+                    }
+                    else
+                    {
+                        go = true;
+                    }
+                }
+                else if (sf::Keyboard::isKeyPressed(sf::Keyboard::F2))
+                {
+                    if (f2)
+                    {
+                        f2 = false;
+                    }
+                    else
+                    {
+                        f2 = true;
                     }
                 }
             }
@@ -272,7 +299,16 @@ int main()
             }
         }
 
-        window.clear();
+        if (f2)
+        {
+            window.clear();
+        }
+        
+        if (go)
+        {
+            itt();
+        }
+        render();
 
         if (rem)
         {
@@ -284,9 +320,6 @@ int main()
 
             window.draw(atm_r);
         }
-
-        itt();
-        render();
 
         window.display();
     }
