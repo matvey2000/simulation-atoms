@@ -41,6 +41,7 @@ struct substr
     float qo;//коэффицент притяжения
     float g;//ускорение свободного падения
     float mmr;//max / min r связи
+    float eds;//сила связи
 };
 
 std::list<atom> atms;//атом лист
@@ -107,7 +108,6 @@ void render()
                     break;
                 };
             }
-            std::cout << atm2.x << " " << atm2.y << "\n";
             
             sf::VertexArray lines(sf::Lines, 2);
             lines[0].position = sf::Vector2f(atm.x + w / 2, atm.y + h / 2);
@@ -154,9 +154,12 @@ void itt()
             atm.ax += sbs.dt * (atm.x - atm2.x) / sqrt((atm.x - atm2.x) * (atm.x - atm2.x) + (atm.y - atm2.y) * (atm.y - atm2.y)) * md;
             atm.ay += sbs.dt * (atm.y - atm2.y) / sqrt((atm.x - atm2.x) * (atm.x - atm2.x) + (atm.y - atm2.y) * (atm.y - atm2.y)) * md;
             
-            if ((!svz) && (pow(atm.x - atm2.x, 2) + pow(atm.y - atm2.y, 2) <= pow(sbs.mmr, 2)))
+
+            //притяжение связи
+            if (svz)
             {
-                atm.svz.push_back(n0);
+                atm.vx += sbs.dt * (atm2.x - atm.x) / sqrt(pow(atm.x - atm2.x, 2) + pow(atm.y - atm2.y, 2)) * sbs.eds;
+                atm.vy += sbs.dt * (atm2.y - atm.y) / sqrt(pow(atm.x - atm2.x, 2) + pow(atm.y - atm2.y, 2)) * sbs.eds;
             }
         }
 
@@ -172,6 +175,19 @@ void itt()
 
         //гравитация
         atm.ay += sbs.g * sbs.dt;
+
+        //обновление связей
+        std::list<int> svz_c;
+        int n = -1;
+        for (auto atm2 : atms)
+        {
+            ++n;
+            if (pow(atm.x - atm2.x, 2) + pow(atm.y - atm2.y, 2) <= pow(sbs.mmr, 2))
+            {
+                svz_c.push_back(n);
+            }
+        }
+        atm.svz = svz_c;
 
         //запись
         atms_c.push_back(atm);
@@ -210,6 +226,7 @@ int main()
     sbs.qo = pow(10, 6);
     sbs.g = 9.8;
     sbs.mmr = 50;
+    sbs.eds = 100.;
 
     type tpe;
 
