@@ -107,6 +107,7 @@ void render()
                     break;
                 };
             }
+            std::cout << atm2.x << " " << atm2.y << "\n";
             
             sf::VertexArray lines(sf::Lines, 2);
             lines[0].position = sf::Vector2f(atm.x + w / 2, atm.y + h / 2);
@@ -135,7 +136,6 @@ void itt()
             ++n0;
 
             bool svz = false;//наличие связи
-            n0++;
             for (auto n : atm.svz)
             {
                 if (n0 == n)
@@ -153,9 +153,8 @@ void itt()
             
             atm.ax += sbs.dt * (atm.x - atm2.x) / sqrt((atm.x - atm2.x) * (atm.x - atm2.x) + (atm.y - atm2.y) * (atm.y - atm2.y)) * md;
             atm.ay += sbs.dt * (atm.y - atm2.y) / sqrt((atm.x - atm2.x) * (atm.x - atm2.x) + (atm.y - atm2.y) * (atm.y - atm2.y)) * md;
-        
-            //образование связей
-            if (sqrt(pow(atm.x - atm2.x, 2) + pow(atm.y - atm2.y, 2)) <= (sbs.mmr) && (!svz))
+            
+            if ((!svz) && (pow(atm.x - atm2.x, 2) + pow(atm.y - atm2.y, 2) <= pow(sbs.mmr, 2)))
             {
                 atm.svz.push_back(n0);
             }
