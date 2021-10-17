@@ -38,8 +38,6 @@ struct substr
     float rd;//радиус атома
     float dt;//время шага симуляции
     float qo;//коэффицент притяжения
-
-    float g;//ускорение свободного падения
 };
 
 std::list<atom> atms;//атом лист
@@ -84,7 +82,6 @@ void render()
     sf::CircleShape atm_r;
     atm_r.setRadius(sbs.rd);
 
-    window.clear();
     for (auto atm : atms)
     {
         //частица
@@ -94,7 +91,6 @@ void render()
         window.draw(atm_r);
     }
     //VertexArray
-    window.display();
 };
 void itt()
 {
@@ -116,7 +112,7 @@ void itt()
             }
 
             //Леннард-Джонс
-            float ar = (atm.tpe.kr + atm2.tpe.kr) / sqrt((atm.x - atm2.x)* (atm.x - atm2.x) + (atm.y - atm2.y)* (atm.y - atm2.y));
+            float ar = (atm.tpe.kr + atm2.tpe.kr) / (sqrt((atm.x - atm2.x) * (atm.x - atm2.x) + (atm.y - atm2.y) * (atm.y - atm2.y)) - 2 * sbs.rd);;
             float md = (12 * atm.tpe.q * atm2.tpe.q / (atm.tpe.kr + atm2.tpe.kr) * (pow(ar,13) - pow(ar, 7))) / atm.tpe.m * sbs.qo;
             
             atm.ax -= sbs.dt * (atm.x - atm2.x) / sqrt((atm.x - atm2.x) * (atm.x - atm2.x) + (atm.y - atm2.y) * (atm.y - atm2.y)) * md;
@@ -132,9 +128,6 @@ void itt()
         {
             atm.vy = -atm.vy;
         }
-
-        //гравитация
-        atm.ay += sbs.g * sbs.dt;
 
         //запись
         atms_c.push_back(atm);
@@ -164,14 +157,13 @@ int main()
 {
     //параметры
 
-    int types = 3;//кол-во типов
+    int Stypes = 3;//кол-во типов
     sbs.a = w;
     sbs.b = h;
-    sbs.dt = 0.1;
-    sbs.n = 50;
+    sbs.dt = 1.;
+    sbs.n = 100;
     sbs.rd = 10.;
-    sbs.qo = pow(10, 6);
-    sbs.g = 9.8;
+    sbs.qo = pow(10, 5);
 
     type tpe;
 
@@ -203,15 +195,29 @@ int main()
     tpes.push_back(tpe);
     /*
     esc - выход
+    f1 - режим "новая частица"
+    left click - установка частицы в режиме новая частица
+    wheel - смена типа частицы
     */
     start();
 
     window.clear();
 
     srand(time(NULL));
+    bool rem = false;//отрисовка частицы у курсора
+    int tpn = 0;//выбранный тип
+    type tpen;
 
+    int len = 0;
+    for (auto tp : tpes)
+    {
+        len++;
+    }
     while (window.isOpen())
     {
+        float mx = sf::Mouse::getPosition().x;
+        float my = sf::Mouse::getPosition().y;
+
         sf::Event evnt;
 
         while (window.pollEvent(evnt))
@@ -222,10 +228,66 @@ int main()
                 {
                     window.close();
                 }
+                else if (evnt.key.code == sf::Keyboard::F1)
+                {
+                    if (rem)
+                    {
+                        rem = false;
+                    }
+                    else
+                    {
+                        rem = true;
+                    }
+                    tpn = 0;
+                }
+                else if (evnt.key.code = sf::Keyboard::Enter)
+                {
+                    if (rem)
+                    {
+                        atom atm;
+
+                        atm.tpe = tpen;
+                        atm.x = mx - w/2;
+                        atm.y = my - h/2;
+
+                        atms.push_back(atm);
+                    }
+                }
+            }
+            else if (evnt.type == sf::Event::MouseWheelMoved)
+            {
+                tpn += evnt.mouseWheel.delta;
+
+                tpn = (len + tpn) % len;
+
+                int num = 0;
+                for (auto tp : tpes)
+                {
+                    if (tpn == num++)
+                    {
+                        tpen = tp;
+                        break;
+                    }
+                }
             }
         }
-        
+
+        window.clear();
+
+        if (rem)
+        {
+            sf::CircleShape atm_r;
+            atm_r.setRadius(sbs.rd);
+
+            atm_r.setFillColor(sf::Color::Color(tpen.col[0], tpen.col[1], tpen.col[2]));
+            atm_r.setPosition(sf::Vector2f(mx - sbs.rd / 2, my - sbs.rd / 2));
+
+            window.draw(atm_r);
+        }
+
         itt();
         render();
+
+        window.display();
     }
 }
