@@ -15,6 +15,8 @@ struct type
     int col[3];//цвет
 
     float m;//масса
+    int v;//валентность
+    float ao;//электротрицательность
 };
 struct atom
 {
@@ -27,6 +29,7 @@ public:
     float ay = 0;
 
     type tpe;//тип
+    std::list<int> svz;
 };
 struct substr
 {
@@ -37,6 +40,7 @@ struct substr
     float dt;//время шага симуляции
     float qo;//коэффицент притяжения
     float g;//ускорение свободного падения
+    float mmr;//max / min r связи
 };
 
 std::list<atom> atms;//атом лист
@@ -88,8 +92,30 @@ void render()
         atm_r.setPosition(sf::Vector2f(atm.x + w / 2 - sbs.rd / 2, atm.y + h / 2 - sbs.rd / 2));
 
         window.draw(atm_r);
+
+        //связи
+        for (auto svz : atm.svz)
+        {
+            atom atm2;
+            int n = -1;
+            for (auto atm3 : atms)
+            {
+                n++;
+                if (n == svz)
+                {
+                    atm2 = atm3;
+                    break;
+                };
+            }
+            
+            sf::VertexArray lines(sf::Lines, 2);
+            lines[0].position = sf::Vector2f(atm.x + w / 2, atm.y + h / 2);
+            lines[1].position = sf::Vector2f(atm2.x + w / 2, atm2.y + h / 2);
+            lines[0].color = sf::Color::Color(atm.tpe.col[0], atm.tpe.col[1], atm.tpe.col[2]);
+            lines[1].color = sf::Color::Color(atm2.tpe.col[0], atm2.tpe.col[1], atm2.tpe.col[2]);
+            window.draw(lines);
+        }
     }
-    //VertexArray
 };
 void itt()
 {
@@ -103,18 +129,36 @@ void itt()
         atm.ax = 0;
         atm.ay = 0;
 
+        int n0 = -1;
         for (auto atm2 : atms)
         {
+            ++n0;
+
+            bool svz = false;//наличие связи
+            n0++;
+            for (auto n : atm.svz)
+            {
+                if (n0 == n)
+                {
+                    svz = true;
+                    break;
+                };
+            };
             if (atm2.x == atm.x || atm.y == atm2.y)
             {
                 continue;
             }
 
-            //Леннард-Джонс
             float md = sbs.qo / ((atm.x - atm2.x) * (atm.x - atm2.x) + (atm.y - atm2.y) * (atm.y - atm2.y)) / atm.tpe.m;
             
             atm.ax += sbs.dt * (atm.x - atm2.x) / sqrt((atm.x - atm2.x) * (atm.x - atm2.x) + (atm.y - atm2.y) * (atm.y - atm2.y)) * md;
             atm.ay += sbs.dt * (atm.y - atm2.y) / sqrt((atm.x - atm2.x) * (atm.x - atm2.x) + (atm.y - atm2.y) * (atm.y - atm2.y)) * md;
+        
+            //образование связей
+            if (sqrt(pow(atm.x - atm2.x, 2) + pow(atm.y - atm2.y, 2)) <= (sbs.mmr) && (!svz))
+            {
+                atm.svz.push_back(n0);
+            }
         }
 
         //стенки
@@ -162,10 +206,11 @@ int main()
     sbs.a = w;
     sbs.b = h;
     sbs.dt = 0.1;
-    sbs.n = 200;
+    sbs.n = 50;
     sbs.rd = 10.;
-    sbs.qo = pow(10, 5);
+    sbs.qo = pow(10, 6);
     sbs.g = 9.8;
+    sbs.mmr = 50;
 
     type tpe;
 
@@ -173,6 +218,8 @@ int main()
     tpe.col[1] = 191;
     tpe.col[2] = 255;
     tpe.m = 1.;
+    tpe.v = 2;
+    tpe.ao = 3.5;
 
     tpes.push_back(tpe);
 
@@ -180,6 +227,8 @@ int main()
     tpe.col[1] = 255;
     tpe.col[2] = 0;
     tpe.m = 1.5;
+    tpe.v = 1;
+    tpe.ao = 0.05;
 
     tpes.push_back(tpe);
 
@@ -187,6 +236,8 @@ int main()
     tpe.col[1] = 20;
     tpe.col[2] = 60;
     tpe.m = 1.2;
+    tpe.v = 6;
+    tpe.ao = 2.6;
 
     tpes.push_back(tpe);
     /*
