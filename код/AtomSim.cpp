@@ -233,7 +233,7 @@ int main()
     sbs.a = w;
     sbs.b = h;
     sbs.dt = 0.1;
-    sbs.n = 0;
+    sbs.n = 50;
     sbs.rd = 10.;
     sbs.qo = pow(10, 6);
     sbs.g = 9.8;
