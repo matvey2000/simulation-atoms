@@ -77,7 +77,7 @@ void start()
                 break;
             };
         }
-        
+
         atms.push_back(atm);
     };
 };
@@ -108,7 +108,7 @@ void render()
                     break;
                 };
             }
-            
+
             sf::VertexArray lines(sf::Lines, 2);
             lines[0].position = sf::Vector2f(atm.x + w / 2, atm.y + h / 2);
             lines[1].position = sf::Vector2f(atm2.x + w / 2, atm2.y + h / 2);
@@ -150,10 +150,10 @@ void itt()
             }
 
             float md = sbs.qo / ((atm.x - atm2.x) * (atm.x - atm2.x) + (atm.y - atm2.y) * (atm.y - atm2.y)) / atm.tpe.m;
-            
+
             atm.ax += sbs.dt * (atm.x - atm2.x) / sqrt((atm.x - atm2.x) * (atm.x - atm2.x) + (atm.y - atm2.y) * (atm.y - atm2.y)) * md;
             atm.ay += sbs.dt * (atm.y - atm2.y) / sqrt((atm.x - atm2.x) * (atm.x - atm2.x) + (atm.y - atm2.y) * (atm.y - atm2.y)) * md;
-            
+
 
             //притяжение связи
             if (svz)
@@ -178,6 +178,7 @@ void itt()
 
         //обновление связей
         std::list<int> svz_c;
+        std::list<int> svz_cc;
         int n = -1;
         for (auto atm2 : atms)
         {
@@ -187,7 +188,18 @@ void itt()
                 svz_c.push_back(n);
             }
         }
-        atm.svz = svz_c;
+
+        //приведение в соответствие с валентность
+        int nmb = -1;
+        for (auto svzz = svz_c.begin(); svzz != svz_c.end(); ++svzz)
+        {
+            nmb++;
+            if (nmb < atm.tpe.v)
+            {
+                svz_cc.push_back(*svzz);
+            }
+        };
+        atm.svz = svz_cc;
 
         //запись
         atms_c.push_back(atm);
@@ -221,7 +233,7 @@ int main()
     sbs.a = w;
     sbs.b = h;
     sbs.dt = 0.1;
-    sbs.n = 50;
+    sbs.n = 0;
     sbs.rd = 10.;
     sbs.qo = pow(10, 6);
     sbs.g = 9.8;
@@ -366,7 +378,7 @@ int main()
         {
             window.clear();
         }
-        
+
         if (go)
         {
             itt();
